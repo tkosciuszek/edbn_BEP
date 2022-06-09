@@ -6,7 +6,7 @@ import numpy as np
 from scipy import stats
 
 import ConceptDrift as cd
-from LogFile import LogFile
+from Utils.LogFile import LogFile
 
 
 def learn_and_dump_model():

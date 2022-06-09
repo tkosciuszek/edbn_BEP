@@ -1,7 +1,7 @@
 from Utils.LogFile import LogFile
 from Data.data import Data
 
-BASE_FOLDER = "~/PycharmProjects/edbn/"
+BASE_FOLDER = "/Users/teddy/Documents/TU_e/ThirdYear/Quartile_4/BEP/edbn_BEP/"
 
 all_data = {"Helpdesk": BASE_FOLDER + "Data/Helpdesk.csv",
             "BPIC12": BASE_FOLDER + "Data/BPIC12.csv",

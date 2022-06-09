@@ -25,6 +25,7 @@ LINE_STYLE = {"DBN": "-", "SDL": "--", "Tax": "-.", "Di Mauro": ":"}
 
 METHODS = ["DBN", "SDL", "Tax", "Di Mauro"]
 DATASETS = ["Helpdesk", "BPIC11", "BPIC12", "BPIC15_1", "BPIC15_2", "BPIC15_3", "BPIC15_4", "BPIC15_5"]
+
 RESET = [True, False]
 WINDOW = [0,1,5]
 
@@ -446,13 +447,29 @@ def create_timing_table(timings, dataset):
 
 
 if __name__ == "__main__":
+    import os
+
+    os.environ["PATH"] += os.pathsep + '/usr/local/texlive/2022/bin/universal-darwin'
+    # print(os.getenv("PATH"))
     results = load_results_new()
     # timings = load_timings()
-    # create_timing_table(timings, "BPIC15_1")
+    # create_timing_table(timings, "Helpdesk")
     # list_results = result_list()
-    # create_baseline_dataset_plot(results)
-    create_strategy_plot_new(results, "BPIC15_3")
-    # create_batch_plot(results)
+    # ---Develops only the baseline------
+    #create_baseline_dataset_plot(results)
+
+    # create_strategy_plot_new(results, "BPIC12")
+    # ---Creates a visual of comparison by Network type------
+    # create_strategy_plot_new(results, "BPIC15_1")
+    # create_strategy_plot(results)
+
+    # ---Views performance only on the BPIC15 Dataset------
+    create_batch_plot(results)
+
+    #---Compares the Baselines Against the Windowed Approach------
     # create_compare_normal_plot(results)
+
     # create_latex_full_table_new(results)
+
+    # ---No idea what this function does------
     # create_cold_plot(results)

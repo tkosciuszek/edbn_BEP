@@ -1,5 +1,5 @@
 class Setting:
-
+#STANDARD = Setting(10, "train-test", True, False, 70, 10)
     def __init__(self, prefix, train_split, split_cases, add_end, percentage=None, train_k=None, filter_cases=None):
         self.prefixsize = prefix
         self.train_percentage = percentage

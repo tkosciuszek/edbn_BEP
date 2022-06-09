@@ -3,6 +3,12 @@
 
     Author: Stephen Pauwels
 """
+import sys
+
+# adding Folder_2 to the system path
+import Methods
+
+sys.path.insert(0, '/Users/teddy/Documents/TU_e/ThirdYear/Quartile_4/BEP/edbn_BEP/nolle/april')
 import pandas as pd
 
 import Methods.Bohmer.Execute as bohmer
@@ -10,7 +16,7 @@ import Methods.EDBN.Anomalies as edbn
 import Utils.PlotResults as plot
 from Utils.LogFile import LogFile
 from april.dataset import Dataset
-from april.fs import get_event_log_files
+from april.fs import get_event_log_files, download_bpic_logs
 
 USED_FILE = 1
 
@@ -36,16 +42,17 @@ GIGANTIC_NOLLE = [(0.45, 0.66), (0.71, 0.85), (0.73, 0.73), (0.67, 0.75)]
 
 def preprocess():
     for log in get_event_log_files():
-        print(log.name)
+        print(1)
         data = Dataset(log.name)
 
-        data.event_log.save_csv("../Data/Nolle_Data/" + log.name + "_data.csv")
-        with open("../Data/Nolle_Data/" + log.name + "_labels.csv", "w") as fout:
+        data.event_log.save_csv("/Users/teddy/Documents/TU_e/ThirdYear/Quartile_4/BEP/edbn_BEP/Data/Nolle_Data" + log.name + "_data.csv")
+        with open("/Users/teddy/Documents/TU_e/ThirdYear/Quartile_4/BEP/edbn_BEP/Data/Nolle_Data" + log.name + "_labels.csv", "w") as fout:
             for label in data.text_labels:
                 if label == "Normal":
                     fout.write("0\n")
                 else:
                     fout.write("1\n")
+    print("Done")
 
 
 def split_dataset(data_name, label_name, train_name, test_name, train_size):
@@ -146,36 +153,83 @@ def compare(files, nolle_result, nolle_labels):
 
 
 if __name__ == "__main__":
-    preprocess(True)
+    # from tqdm import tqdm
+    # from april.processmining.log import EventLog
+    import os
+    # from april.fs import BPIC_DIR
+    # from april.fs import EVENTLOG_DIR
+    #
+    print("Executing Prepro")
+    # #download_bpic_logs()
+    # xes_files = [
+    #     'BPIC12.xes.gz',
+    #     'BPIC13_closed_problems.xes.gz',
+    #     'BPIC13_incidents.xes.gz',
+    #     'BPIC13_open_problems.xes.gz',
+    #     'BPIC15_1.xes.gz',
+    #     'BPIC15_2.xes.gz',
+    #     'BPIC15_3.xes.gz',
+    #     'BPIC15_4.xes.gz',
+    #     'BPIC15_5.xes.gz',
+    #     'BPIC17.xes.gz',
+    #     'BPIC17_offer_log.xes.gz'
+    # ]
+    #
+    # json_files = [
+    #     'bpic12-0.0-1.json.gz',
+    #     'bpic13-0.0-1.json.gz',
+    #     'bpic13-0.0-2.json.gz',
+    #     'bpic13-0.0-3.json.gz',
+    #     'bpic15-0.0-1.json.gz',
+    #     'bpic15-0.0-2.json.gz',
+    #     'bpic15-0.0-3.json.gz',
+    #     'bpic15-0.0-4.json.gz',
+    #     'bpic15-0.0-5.json.gz',
+    #     'bpic17-0.0-1.json.gz',
+    #     'bpic17-0.0-2.json.gz'
+    # ]
+    #
+    # for xes_file, json_file in tqdm(list(zip(xes_files, json_files))):
+    #     event_log = EventLog.from_xes(os.path.join(BPIC_DIR, xes_file))
+    #     event_log.save_json(os.path.join(EVENTLOG_DIR, json_file))
 
+    preprocess()
+
+    print("Testing Small Sample")
     test_sample([SMALL[1]])
-    test_sample([MEDIUM[1]])
-    test_sample([LARGE[1]])
-    test_sample([HUGE[1]])
-    test_sample([P2P[1]])
-    test_sample([WIDE[1]])
-    test_sample([GIGANTIC[1]])
+    # print("Testing Medium Sample")
+    # test_sample([MEDIUM[1]])
+    # print("Testing Large Sample")
+    # test_sample([LARGE[1]])
+    # print("Testing Huge Sample")
+    # test_sample([HUGE[1]])
+    # print("Testing P2P Sample")
+    # test_sample([P2P[1]])
+    # print("Testing Wide Sample")
+    # test_sample([WIDE[1]])
+    # print("Testing Gigantic Sample")
+    # test_sample([GIGANTIC[1]])
 
-    test_full([SMALL[1]])
-    test_full([MEDIUM[1]])
-    test_full([LARGE[1]])
-    test_full([HUGE[1]])
-    test_full([P2P[1]])
-    test_full([WIDE[1]])
-    test_full([GIGANTIC[1]])
-
-    test_bohmer([SMALL[1]])
-    test_bohmer([MEDIUM[1]])
-    test_bohmer([LARGE[1]])
-    test_bohmer([HUGE[1]])
-    test_bohmer([P2P[1]])
-    test_bohmer([WIDE[1]])
-    test_bohmer([GIGANTIC[1]])
-
-    compare([SMALL[1]], SMALL_NOLLE, METHODS)
-    compare([MEDIUM[1]], MEDIUM_NOLLE, METHODS)
-    compare([LARGE[1]], LARGE_NOLLE, METHODS)
-    compare([HUGE[1]], HUGE_NOLLE, METHODS)
-    compare([P2P[1]], P2P_NOLLE, METHODS)
-    compare([WIDE[1]], WIDE_NOLLE, METHODS)
-    compare([GIGANTIC[1]], GIGANTIC_NOLLE, METHODS)
+    # test_full([SMALL[1]])
+    # test_full([MEDIUM[1]])
+    # test_full([LARGE[1]])
+    # test_full([HUGE[1]])
+    # test_full([P2P[1]])
+    # test_full([WIDE[1]])
+    # test_full([GIGANTIC[1]])
+    #
+    # test_bohmer([SMALL[1]])
+    # test_bohmer([MEDIUM[1]])
+    # test_bohmer([LARGE[1]])
+    # test_bohmer([HUGE[1]])
+    # test_bohmer([P2P[1]])
+    # test_bohmer([WIDE[1]])
+    # test_bohmer([GIGANTIC[1]])
+    #
+    # compare([SMALL[1]], SMALL_NOLLE, METHODS)
+    # compare([MEDIUM[1]], MEDIUM_NOLLE, METHODS)
+    # compare([LARGE[1]], LARGE_NOLLE, METHODS)
+    # compare([HUGE[1]], HUGE_NOLLE, METHODS)
+    # compare([P2P[1]], P2P_NOLLE, METHODS)
+    # compare([WIDE[1]], WIDE_NOLLE, METHODS)
+    # compare([GIGANTIC[1]], GIGANTIC_NOLLE, METHODS)

@@ -17,13 +17,16 @@ def store_timings(file, timings):
 
 
 if __name__ == "__main__":
-    DATASETS = ["Helpdesk", "BPIC11", "BPIC12", "BPIC15_1", "BPIC15_2", "BPIC15_3", "BPIC15_4", "BPIC15_5"]
-    METHODS = ["SDL", "DBN", "DIMAURO", "TAX"]
+    # DATASETS = ["Helpdesk", "BPIC11", "BPIC12", "BPIC15_1", "BPIC15_2", "BPIC15_3", "BPIC15_4", "BPIC15_5"]
+    DATASETS = ["BPIC15_1", "BPIC15_2"]
+    # METHODS = ["SDL", "DBN", "DIMAURO", "TAX"]
+    METHODS = ["TAX"]
     DRIFT = True
+    ADWIN = True
     RESET = [False, True]
     WINDOW = [0, 1, 5]
     batch = ["month"]
-
+#Predefined Drift List from KNOWN Drift Locations Below
     DRIFT_LIST = {
         "Helpdesk": [9, 26],
         "BPIC11": [1, 9, 18],
@@ -43,6 +46,7 @@ if __name__ == "__main__":
 
         for m in METHODS:
             d = Data.get_data(data_name)
+            print(d.logfile.)
             m = Methods.get_prediction_method(m)
             s = setting.STANDARD
             s.train_percentage = 50
@@ -54,7 +58,14 @@ if __name__ == "__main__":
 
             import time
             start_time = time.time()
+            dtrain = d.train.get_data
+            print(d.train.contextdata)
+
+            #------------BUILD PREFIX TREES--------------
+
+
             basic_model = m.train(d.train)
+
             print("Runtime %s:" % m, time.time() - start_time)
             res = m.test(basic_model, d.test_orig)
 
@@ -72,6 +83,18 @@ if __name__ == "__main__":
                             store_results("results/%s_%s_drift_update.csv" % (m.name, d.name), results)
                             store_timings("results/%s_%s_drift_update_time.csv" % (m.name, d.name), timings)
 
+                    if ADWIN:
+                        d.create_batch(b, timeformat)
+                        results, timings = m.test_and_update_drift_adwin(basic_model, d, r)
+                        if r:
+                            store_results("results/%s_%s_adwin_reset.csv" % (m.name, d.name), results)
+                            store_timings("results/%s_%s_adwin_reset_time.csv" % (m.name, d.name), timings)
+                        else:
+                            store_results("results/%s_%s_adwin_update.csv" % (m.name, d.name), results)
+                            store_timings("results/%s_%s_adwin_update_time.csv" % (m.name, d.name), timings)
+
+                    #NEED TO CHANGE THIS FOR THE NEW UPDATING OF THE WINDOWS, PROBABLY WHILE LOOP
+                    #Also need to change the window period so that it auto updates as it goes.......
                     for w in WINDOW:
                         d.create_batch(b, timeformat)
                         results, timings = m.test_and_update(basic_model, d, w, r)

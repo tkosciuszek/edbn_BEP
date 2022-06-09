@@ -28,6 +28,9 @@ class Method:
         return self.test_func(model, test_data)
 
     def test_and_update(self, model, data, window, reset):
+        '''Windows have been set to size of 0 months, 1 month,  and 5 months
+           for how much historical data to use in training/retraining.
+        '''
         try:
             model = copy.deepcopy(model)
         except:
@@ -69,7 +72,54 @@ class Method:
             timings.append(time.time() - start_time)
         return results, timings
 
+
     def test_and_update_drift(self, model, data, drifts, reset):
+        '''Drifts have been pre-determined from dataset and retraining occurs at
+           these known drift points.
+        '''
+        try:
+            model = copy.deepcopy(model)
+        except:
+            import tensorflow as tf
+            model.save("tmp_model")
+            model = tf.keras.models.load_model("tmp_model")
+
+        train_data = data.train
+
+        results = []
+        timings = []
+        for predict_time in range(len(data.get_batch_ids())):
+            print("%i / %i" % (predict_time, len(data.get_batch_ids())))
+            predict_batch = data.get_test_batch(predict_time)
+            # Test current batch
+            results.extend(self.test(model, predict_batch))
+
+            start_time = time.time()
+            if reset:
+                if predict_time in drifts:  # New drift detected
+                    print("RESET - Drift Detected")
+                    train_data = predict_batch
+                else:
+                    print("RESET - No drift")
+                    train_data = train_data.extend_data(predict_batch)
+                model = self.train(train_data)
+            else:
+                train_data = predict_batch
+                if predict_time in drifts:
+                    print("UPDATE - Drift Detected")
+                    model = self.train(train_data)
+                else:
+                    print("UPDATE - No drift")
+                    model = self.update(model, train_data)
+            timings.append(time.time() - start_time)
+
+        return results, timings
+
+    # NEED TO EDIT THIS FOR THE NEW UPDATING OF THE WINDOWS.......
+    def test_and_update_drift_adwin(self, model, data, reset):
+        '''Drift is automatically detected and corrected for once it is noticed.
+           this occurs using an ADWIN method.
+        '''
         try:
             model = copy.deepcopy(model)
         except:

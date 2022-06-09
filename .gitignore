@@ -3,3 +3,8 @@
 /venv/*
 /Data/BPIC16.csv
 /Data/BPIC17.csv
+*.csv
+*.xes.gz
+*.xes
+*.gz
+*.png

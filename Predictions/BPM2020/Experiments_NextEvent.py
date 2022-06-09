@@ -45,8 +45,9 @@ def main(argv):
     ###
     # Check if all required folders exist
     ###
-    if not os.path.exists(OUTPUT_FOLDER):
-        os.mkdir(OUTPUT_FOLDER)
+    if not os.path.exists(model_folder):
+        os.makedirs(model_folder)
+
 
     # Perform some method specific checks
     if method == "DBN":
@@ -83,6 +84,8 @@ def main(argv):
     ###
     print("EXPERIMENT NEXT ACTIVITY PREDICTION:", argv)
     # Load model
+    if not os.path.exists(os.path.join(model_folder, "model")):
+        os.makedirs(os.path.join(model_folder, "model"))
     if method == "DBN":
         model_file = os.path.join(model_folder, "model")
         with open(model_file, "rb") as pickle_file:

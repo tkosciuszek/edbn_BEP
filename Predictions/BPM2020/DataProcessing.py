@@ -21,8 +21,8 @@ BPIC12W = "BPIC12W"
 HELPDESK = "HELPDESK"
 BPIC18 = "BPIC18"
 
-DATA_PATH = "../../Data/"
-LOGFILE_PATH = "../../Data/PredictionData/"
+DATA_PATH = "Data/"
+LOGFILE_PATH = "Data/PredictionData"
 
 def preprocess(logfile, add_end, reduce_tasks, resource_pools, resource_attr, remove_resource):
     # Discover Roles
@@ -86,10 +86,11 @@ def preprocess(logfile, add_end, reduce_tasks, resource_pools, resource_attr, re
         print("Removed duplicated events")
 
     logfile.convert2int()
-
+    print(logfile.attributes())
     return logfile
 
 def get_data(dataset, dataset_size, k, add_end, reduce_tasks, resource_pools, remove_resource):
+    print(os.getcwd())
     filename_parts = [dataset, str(dataset_size), str(k)]
     for v in [add_end, reduce_tasks, resource_pools, remove_resource]:
         if v:
@@ -106,34 +107,35 @@ def get_data(dataset, dataset_size, k, add_end, reduce_tasks, resource_pools, re
         with open(cache_file, "rb") as pickle_file:
             preprocessed_log = pickle.load(pickle_file)
     else:
+        os.makedirs(os.path(LOGFILE_PATH))
         resource_attr = None
         if dataset == BPIC15_1 or dataset == BPIC15:
-            logfile = LogFile(DATA_PATH + "BPIC15_1_sorted_new.csv", ",", 0, dataset_size, None, "case", activity_attr="Activity", convert=False, k=k)
+            logfile = LogFile(DATA_PATH + "BPIC15_1_sorted_new.csv", ",", 0, dataset_size, None, "case", activity_attr="activity", convert=False, k=k)
             resource_attr = "Resource"
             colTitles = ["case", "event", "role"]
             logfile.keep_attributes(colTitles)
             logfile.filter_case_length(5)
         elif dataset == BPIC15_2:
             logfile = LogFile(DATA_PATH + "BPIC15_2_sorted_new.csv", ",", 0, dataset_size, None, "case",
-                              activity_attr="Activity", convert=False, k=k)
+                              activity_attr="activity", convert=False, k=k)
             resource_attr = "Resource"
             colTitles = ["case", "event", "role"]
             logfile.keep_attributes(colTitles)
             logfile.filter_case_length(5)
         elif dataset == BPIC15_3:
-            logfile = LogFile(DATA_PATH + "BPIC15_3_sorted_new.csv", ",", 0, dataset_size, None, "case", activity_attr="Activity", convert=False, k=k)
+            logfile = LogFile(DATA_PATH + "BPIC15_3_sorted_new.csv", ",", 0, dataset_size, None, "case", activity_attr="activity", convert=False, k=k)
             resource_attr = "Resource"
             colTitles = ["case", "event", "role"]
             logfile.keep_attributes(colTitles)
             logfile.filter_case_length(5)
         elif dataset == BPIC15_4:
-            logfile = LogFile(DATA_PATH + "BPIC15_4_sorted_new.csv", ",", 0, dataset_size, None, "case", activity_attr="Activity", convert=False, k=k)
+            logfile = LogFile(DATA_PATH + "BPIC15_4_sorted_new.csv", ",", 0, dataset_size, None, "case", activity_attr="activity", convert=False, k=k)
             resource_attr = "Resource"
             colTitles = ["case", "event", "role"]
             logfile.keep_attributes(colTitles)
             logfile.filter_case_length(5)
         elif dataset == BPIC15_5:
-            logfile = LogFile(DATA_PATH + "BPIC15_5_sorted_new.csv", ",", 0, dataset_size, None, "case", activity_attr="Activity", convert=False, k=k)
+            logfile = LogFile(DATA_PATH + "BPIC15_5_sorted_new.csv", ",", 0, dataset_size, None, "case", activity_attr="activity", convert=False, k=k)
             resource_attr = "Resource"
             colTitles = ["case", "event", "role"]
             logfile.keep_attributes(colTitles)
@@ -174,9 +176,12 @@ def get_data(dataset, dataset_size, k, add_end, reduce_tasks, resource_pools, re
 def calc_charact():
     import numpy as np
     print("Calculating characteristics")
-    datasets = [BPIC12, BPIC12W, BPIC15_1, BPIC15_2, BPIC15_3, BPIC15_4, BPIC15_5, HELPDESK]
+    datasets = [BPIC12, BPIC12W, BPIC15_1, BPIC15_2,
+    BPIC15_3, BPIC15_4, BPIC15_5, HELPDESK]
     for dataset in datasets:
         logfile, name = get_data(dataset, 20000000, 0, False, False, False, True)
+        print("Logfile get data is {}".format(logfile.get_data()))
+        print("Logfile activity is {}".format(logfile.activity))
         cases = logfile.get_cases()
         case_lengths = [len(c[1]) for c in cases]
         print("Logfile:", name)
