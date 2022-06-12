@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
         for m in METHODS:
             d = Data.get_data(data_name)
-            print(d.logfile.)
+            print(d.logfile.data)
             m = Methods.get_prediction_method(m)
             s = setting.STANDARD
             s.train_percentage = 50
@@ -60,6 +60,7 @@ if __name__ == "__main__":
             start_time = time.time()
             dtrain = d.train.get_data
             print(d.train.contextdata)
+            print(d.train.contextdata.columns)
 
             #------------BUILD PREFIX TREES--------------
 

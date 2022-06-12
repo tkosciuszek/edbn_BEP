@@ -90,6 +90,8 @@ class Method:
         timings = []
         for predict_time in range(len(data.get_batch_ids())):
             print("%i / %i" % (predict_time, len(data.get_batch_ids())))
+
+            ### TODO: Change Below so that it can accept new data as input from incoming data
             predict_batch = data.get_test_batch(predict_time)
             # Test current batch
             results.extend(self.test(model, predict_batch))

@@ -2,11 +2,11 @@ import pandas as pd
 from math import ceil
 from itertools import tee, islice
 from collections import deque
-from PrefixTreeClass import PrefixTree
-from HeuristicsAlgo import directlyFollows
+from PrefixTreeCDDmain.PrefixTreeClass import PrefixTree
+from PrefixTreeCDDmain.HeuristicsAlgo import directlyFollows
 import rpy2.robjects.numpy2ri
 rpy2.robjects.numpy2ri.activate()
-from DDScripts import prefixTreeDistances, driftDetectionADWIM, driftDetectionPH
+from PrefixTreeCDDmain.DDScripts import prefixTreeDistances, driftDetectionADWIM, driftDetectionPH
 
 # Class for the Drifts
 class Drift:

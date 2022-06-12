@@ -1,6 +1,6 @@
 # Module for Heuristics Miner algorithm
 from itertools import combinations
-import settings
+import PrefixTreeCDDmain.settings as settings
 from pm4py.visualization.petrinet import visualizer as pn_visualizer
 from pm4py.algo.discovery.heuristics import algorithm as heuristics_miner
 

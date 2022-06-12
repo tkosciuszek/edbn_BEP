@@ -13,8 +13,9 @@ import math
 
 class LogFile:
 
-    def __init__(self, filename, delim, header, rows, time_attr, trace_attr, activity_attr = None, values = None, integer_input = False, convert = True, k = 1, dtype=None):
-        self.filename = filename
+    def __init__(self, df, time_attr, trace_attr, activity_attr = None, values = None, integer_input = False,\
+                 convert = True, k = 1, dtype=None):
+        self.df = df
         self.time = time_attr
         self.trace = trace_attr
         self.activity = activity_attr
@@ -33,11 +34,11 @@ class LogFile:
         type = "str"
         if integer_input:
             type = "int"
-        if filename is not None:
+        if df is not None:
             if dtype is not None:
-                self.data = pd.read_csv(self.filename, header=header, nrows=rows, delimiter=delim, encoding='latin-1', dtype=dtype)
+                self.data = df
             else:
-                self.data = pd.read_csv(self.filename, header=header, nrows=rows, delimiter=delim, encoding='latin-1')
+                self.data = df
 
             # Determine types for all columns - numerical or categorical
             for col_type in self.data.dtypes.iteritems():
@@ -361,8 +362,8 @@ class LogFile:
         print("Train:", len(train_inds))
         print("Test:", len(test_inds))
 
-        train_logfile = LogFile(None, None, None, None, self.time, self.trace, self.activity, self.values, False, False)
-        train_logfile.filename = self.filename
+        train_logfile = LogFile(None, self.time, self.trace, self.activity, self.values, False, False)
+        train_logfile.df = self.df
         train_logfile.values = self.values
         train_logfile.contextdata = train
         train_logfile.categoricalAttributes = self.categoricalAttributes
@@ -370,8 +371,8 @@ class LogFile:
         train_logfile.data = self.data.loc[train_inds]
         train_logfile.k = self.k
 
-        test_logfile = LogFile(None, None, None, None, self.time, self.trace, self.activity, self.values, False, False)
-        test_logfile.filename = self.filename
+        test_logfile = LogFile(None, self.time, self.trace, self.activity, self.values, False, False)
+        test_logfile.df = self.df
         test_logfile.values = self.values
         test_logfile.contextdata = test
         test_logfile.categoricalAttributes = self.categoricalAttributes

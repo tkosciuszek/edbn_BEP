@@ -59,7 +59,7 @@ def learn_model(log, attributes, epochs, early_stop):
               epochs=epochs)
     return model
 
-
+#This could cause some problems later on down the line
 def transform_data(log, columns):
     num_activities = len(log.values[log.activity]) + 1
 
