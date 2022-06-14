@@ -1,6 +1,6 @@
 import Predictions.setting
 import Predictions.setting as setting
-import Data
+import DataDepr as Data
 import Methods
 
 

@@ -20,19 +20,7 @@ from itertools import islice
 from collections import OrderedDict
 from PrefixTreeCDDmain.CDD import Window
 from skmultiflow.drift_detection import ADWIN, PageHinkley
-import gzip
 
-
-def store_results(file, results):
-    with open(file, "w") as fout:
-        for r in results:
-            fout.write(",".join([str(r_i) for r_i in r]) + "\n")
-
-
-def store_timings(file, timings):
-    with open(file, "w") as fout:
-        for t in timings:
-            fout.write(str(t) + "\n")
 
 
 @click.command()
@@ -47,7 +35,7 @@ def store_timings(file, timings):
 @click.option('-c', "--config", default=False, show_default=True, is_flag=False, flag_value=False,
               help='(True/False) Configuration for generating sub-logs from the drifts identified')
 @click.option('-f', '--file', help='Path to the XES log file.')
-def main(config, file='input_files/T_BPIC15_1.xes.gz', window_size=10, tree_size=1000, decay_lambda=0.25, noise=1):
+def main(config, file, window_size=10, tree_size=1000, decay_lambda=0.25, noise=1):
     """This is the Prefix-Tree Concept Drift Detection algorithm."""
     DATASETS = ["BPIC15_1", "BPIC15_2"]
     # METHODS = ["SDL", "DBN", "DIMAURO", "TAX"]
@@ -63,15 +51,10 @@ def main(config, file='input_files/T_BPIC15_1.xes.gz', window_size=10, tree_size
     settings.init()
     endEventsDic = dict()
     window = Window(initWinSize=window_size)
-    # filePath_gz = file
-    # file_opened = gzip.open(file, 'rb')
-    # filePath = file_opened
-
-    # for file in os.listdir("dataset\BPI_Challenge_2020"):
+    print("I actually read this line")
     streaming_ev_object = stream_xes_importer.apply(os.path.abspath(file),
-                                                    variant=stream_xes_importer.Variants.XES_TRACE_STREAM)
+                                                        variant=stream_xes_importer.Variants.XES_TRACE_STREAM)
 
-    # Process the log Trace-by-Trace
     for trace in streaming_ev_object:
         lastEvent = trace[-1]["concept:name"]
         timeStamp = trace[-1]["time:timestamp"]
@@ -101,8 +84,6 @@ def main(config, file='input_files/T_BPIC15_1.xes.gz', window_size=10, tree_size
 
     eventCounter = 0  # Counter for number of events
     currentNode = tree.root  # Start from the root node
-
-    start_time = time.time()
 
     numEvents = 54818
     r = False
@@ -138,94 +119,7 @@ def main(config, file='input_files/T_BPIC15_1.xes.gz', window_size=10, tree_size
             s.train_percentage = 100
             #
             d.prepare(s)
-            basic_model = m.train(d.train)
-            print("Model Trained")
-            # d.create_batch(b, timeformat)
-            # results, timings = m.test_and_update_drift_adwin(basic_model, d, r)
-            # store_results("results/%s_%s_adwin_update.csv" % (m.name, d.name), results)
-            # store_timings("results/%s_%s_adwin_update_time.csv" % (m.name, d.name), timings)
-
-
-        if window.cddFlag:  # If a complete new tree has been created
-            if len(window.prefixTreeList) == window.WinSize:  # Maximum size of window reached, start concept drift detection within the window
-                window.conceptDriftDetection(adwin, ph)
-                window.WinSize = min(window.WinSize + 1, window.maxWindowSize)
-
-                if len(window.prefixTreeList) == window.WinSize:  # If there was no drift detected within the window
-                    window.prefixTreeList = deque(islice(window.prefixTreeList, 1, None))  # Drop the oldest tree
-
-        if len(driftsidd) < len(window.driftsIdentified) and eventCounter > round(numEvents / 4):
-            # Do some stuff here to update the model with the newly identified drifts
-            if len(driftsidd) != 0:
-                log_df = histDf[driftsidd[-1] + 1:]
-            else:
-                log_df = histDf
-            # log_df = histDf
-            oldVals = d.train.values
-            # print(oldVals)
-            d = Data('BPIC_2015', LogFile(log_df, time_attr="completeTime", trace_attr="case",
-                                          activity_attr='event', values=d.train.values, convert=False))
-            d.prepare(s)
-            print("Test Results Up to Drift")
-            print(d.train.contextdata)
-            #speed this up, maybe use filters or exclusions or drops <-(probably fastest)
-            #event [2, 6, 10, 14, 18, 22, 26, 30, 34, 38]
-            #role [3, 7, 11, 15, 19, 23, 27, 31, 35, 39]
-            #compl [4, 8, 12, 16, 20, 24, 28, 32, 36, 40] <- not applicable
-            #case [5, 9, 13, 17, 21, 25, 29, 33, 37, 41]
-            #df = df[df.iloc[:, attrColumns].values < attrMaxVal]
-            #to get max val, count length of list in d.train.values and determine max
-            #trick from log context data creation
-            for ind_, row_ in d.train.contextdata.iterrows():
-                for attr in oldVals.keys():
-                    for val in row_
-                        if row_[attr] not in oldVals[attr]:
-                            d.train.contextdata
-
-            #results = m.test(basic_model, d.train)
-            #store_results("results/%s_%s_drift_reset.csv" % (m.name, d.name), results)
-            print("Updating model")
-            basic_model = m.train(d.train)
-            driftsidd.append(eventCounter)
-
-
-    end_time = time.time()
-    print("Total Processing Time {}".format(end_time - start_time))
-    print("Total number of events is {}".format(eventCounter))
-    print("Identified drifts {}".format(driftsidd))
-    if configuration:
-        logProvider(static_event_stream, window)  # Provide the sub-logs of the drifts
-
-
-def as_dict(object):
-    dictionaryObject = object.__dict__
-    return dictionaryObject
-
-
-def logProvider(log, window):
-    """Function to provide the sub-logs of each drift"""
-    for drift in window.driftsIdentified:
-        W0start = drift.eventsSeen - drift.refWinSize
-        W0end = drift.eventsSeen
-        W1start = drift.eventsSeen
-        W1end = drift.eventsSeen + drift.testWinSize
-
-        W0SubLog = log[W0start:W0end]
-        W1SubLog = log[W1start:W1end]
-
-        if not os.path.exists("results"):
-            os.makedirs("results")
-
-        variables = W0SubLog[0].__dict__['_dict'].keys()
-
-        df1 = pd.DataFrame([[i.get(j) for j in variables] for i in W0SubLog], columns=variables)
-        df2 = pd.DataFrame([[i.get(j) for j in variables] for i in W1SubLog], columns=variables)
-
-        indexOfDrift = str(window.driftsIdentified.index(drift))
-
-        xes_exporter.apply(df1, os.path.abspath('results\\drift' + indexOfDrift + "W0.xes"))
-        xes_exporter.apply(df2, os.path.abspath('results\\drift' + indexOfDrift + "W1.xes"))
-
+            print(d.train.df)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

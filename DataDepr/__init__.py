@@ -1,5 +1,5 @@
-from Utils.LogFile import LogFile
-from Data.data import Data
+from Utils.LogFileDepr import LogFile
+from DataDepr.dataDepr import Data
 
 BASE_FOLDER = "/Users/teddy/Documents/TU_e/ThirdYear/Quartile_4/BEP/edbn_BEP/"
 

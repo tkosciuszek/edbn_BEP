@@ -96,6 +96,10 @@ def train(log, epochs, early_stop):
 
 def update(model, log):
     inputs, expected, _ = transform_data(log, [a for a in log.attributes() if a != log.time and a != log.trace])
+    print("Input")
+    print(inputs)
+    print("Expected")
+    print(expected)
     model.fit(inputs, y=expected,
               validation_split=0,
               verbose=0,
