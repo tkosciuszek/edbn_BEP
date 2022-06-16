@@ -24,8 +24,8 @@ class Method:
     def update(self, model, train_data, params=None):
         return self.update_func(model, train_data)
 
-    def test(self, model, test_data):
-        return self.test_func(model, test_data)
+    def test(self, model, test_data, evLen, rolLen):
+        return self.test_func(model, test_data, evLen, rolLen)
 
     def test_and_update(self, model, data, window, reset):
         '''Windows have been set to size of 0 months, 1 month,  and 5 months

@@ -23,7 +23,7 @@ for k in colors:
 
 LINE_STYLE = {"DBN": "-", "SDL": "--", "Tax": "-.", "Di Mauro": ":"}
 
-METHODS = ["DBN", "SDL", "Tax", "Di Mauro"]
+METHODS = ["SDL_OTF","DBN", "SDL", "Tax", "Di Mauro"]
 DATASETS = ["Helpdesk", "BPIC11", "BPIC12", "BPIC15_1", "BPIC15_2", "BPIC15_3", "BPIC15_4", "BPIC15_5"]
 
 RESET = [True, False]
@@ -341,7 +341,7 @@ def create_strategy_plot(results, windowsize = 2500):
         fig_num += 1
 
     plt.tight_layout()
-    leg = plt.legend(loc="upper center", bbox_to_anchor=(-0.1, -0.15), ncol=4, borderaxespad=0.1)
+    leg = plt.legend(loc='center right')#,bbox_to_anchor=(0.5, 0.5),ncol=4, borderaxespad=0.1)#, bbox_to_anchor=(-0.1, -0.15), ncol=4, borderaxespad=0.1)
     plt.savefig("strategy_overview.eps")
     plt.show()
 
@@ -358,15 +358,19 @@ def create_batch_plot(results):
         col_idx = 0
 
         for m in METHODS:
-            for b in ["day", "week", "month"]:
-                filename = get_filename(d, m, b, False)
-                if filename in results:
-                    x, y = results[filename]
-                    plt.subplot(fig_num)
-                    plt.title(d.replace("_","\_"))
-                    plt.ylim(0, 1)
-                    plt.plot(x, y, label=("%s (%s)" % (m, b)), color=tableau20[col_idx], ls=LINE_STYLE[m])
-                    col_idx += 1
+            #for b in ["day", "week", "month"]:
+                #filename = get_filename(d, m, b, False)
+            filename = get_filename(d, m, True, False)
+            # print(filename)
+            if filename in results:
+                # print(filename)
+                # print(results[filename])
+                x, y = results[filename]
+                plt.subplot(fig_num)
+                plt.title(d.replace("_","\_"))
+                plt.ylim(0, 1)
+                plt.plot(x, y, label=("%s (%s)" % (m, b)), color=tableau20[col_idx], ls=LINE_STYLE[m])
+                col_idx += 1
 
         fig_num += 1
 
@@ -452,6 +456,7 @@ if __name__ == "__main__":
     os.environ["PATH"] += os.pathsep + '/usr/local/texlive/2022/bin/universal-darwin'
     # print(os.getenv("PATH"))
     results = load_results_new()
+    # print(results)
     # timings = load_timings()
     # create_timing_table(timings, "Helpdesk")
     # list_results = result_list()
@@ -460,11 +465,11 @@ if __name__ == "__main__":
 
     # create_strategy_plot_new(results, "BPIC12")
     # ---Creates a visual of comparison by Network type------
-    # create_strategy_plot_new(results, "BPIC15_1")
+    create_strategy_plot_new(results, "BPIC15_1")
     # create_strategy_plot(results)
 
     # ---Views performance only on the BPIC15 Dataset------
-    create_batch_plot(results)
+    # create_batch_plot(results)
 
     #---Compares the Baselines Against the Windowed Approach------
     # create_compare_normal_plot(results)

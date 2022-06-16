@@ -108,6 +108,8 @@ def main(config, file='input_files/T_BPIC15_1.xes.gz', window_size=10, tree_size
     r = False
     histDf = pd.DataFrame(columns=['event', 'role', 'completeTime', 'case'])
     driftsidd = []
+    lenTrainedActs = 0
+    lenTrainedRoles = 0
     for ev in static_event_stream:
         # print(ev)
         # file_opened.close()
@@ -123,7 +125,7 @@ def main(config, file='input_files/T_BPIC15_1.xes.gz', window_size=10, tree_size
         eventCounter += 1
 
         # initial training of the dataset
-        if eventCounter == round(numEvents / 4):
+        if eventCounter == round(numEvents / 2):
             # basic_model = m.train(d.train)
             # res = m.test(basic_model, d.test_orig)
             # store_results("results/%s_%s_normal.csv" % (m.name, d.name), res)
@@ -139,6 +141,8 @@ def main(config, file='input_files/T_BPIC15_1.xes.gz', window_size=10, tree_size
             #
             d.prepare(s)
             basic_model = m.train(d.train)
+            lenTrainedActs += len(d.train.values['event'])
+            lenTrainedRoles += len(d.train.values['role'])
             print("Model Trained")
             # d.create_batch(b, timeformat)
             # results, timings = m.test_and_update_drift_adwin(basic_model, d, r)
@@ -154,38 +158,45 @@ def main(config, file='input_files/T_BPIC15_1.xes.gz', window_size=10, tree_size
                 if len(window.prefixTreeList) == window.WinSize:  # If there was no drift detected within the window
                     window.prefixTreeList = deque(islice(window.prefixTreeList, 1, None))  # Drop the oldest tree
 
-        if len(driftsidd) < len(window.driftsIdentified) and eventCounter > round(numEvents / 4):
+        if len(driftsidd) < len(window.driftsIdentified) and eventCounter > round(numEvents / 2):
             # Do some stuff here to update the model with the newly identified drifts
-            if len(driftsidd) != 0:
-                log_df = histDf[driftsidd[-1] + 1:]
-            else:
-                log_df = histDf
-            # log_df = histDf
+            # if len(driftsidd) != 0:
+            #     log_df = histDf[driftsidd[-1] + 1:]
+            # else:
+            #     log_df = histDf
+            log_df = histDf
             oldVals = d.train.values
             # print(oldVals)
             d = Data('BPIC_2015', LogFile(log_df, time_attr="completeTime", trace_attr="case",
                                           activity_attr='event', values=d.train.values, convert=False))
             d.prepare(s)
             print("Test Results Up to Drift")
-            print(d.train.contextdata)
+            # print(d.train.contextdata)
             #speed this up, maybe use filters or exclusions or drops <-(probably fastest)
-            #event [2, 6, 10, 14, 18, 22, 26, 30, 34, 38]
-            #role [3, 7, 11, 15, 19, 23, 27, 31, 35, 39]
+            evList = [2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42]
+            roleList = [3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43]
             #compl [4, 8, 12, 16, 20, 24, 28, 32, 36, 40] <- not applicable
-            #case [5, 9, 13, 17, 21, 25, 29, 33, 37, 41]
+            cList = [5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45]
             #df = df[df.iloc[:, attrColumns].values < attrMaxVal]
+            attrList = [(evList, len(oldVals['event'])), (roleList, len(oldVals['role'])), (cList, len(oldVals['case']))]
             #to get max val, count length of list in d.train.values and determine max
             #trick from log context data creation
-            for ind_, row_ in d.train.contextdata.iterrows():
-                for attr in oldVals.keys():
-                    for val in row_
-                        if row_[attr] not in oldVals[attr]:
-                            d.train.contextdata
-
-            #results = m.test(basic_model, d.train)
-            #store_results("results/%s_%s_drift_reset.csv" % (m.name, d.name), results)
+            # print("Shape of D Train context is {}".format(d.train.contextdata.shape))
+            # print(d.train.contextdata)
+            for pair in attrList:
+                for col in pair[0]:
+                    d.train.contextdata = d.train.contextdata[d.train.contextdata.iloc[:,col] < pair[1]]
+            #print(d.train.contextdata)
+            # print("Shape of D Train context is {}".format(d.train.contextdata.shape))
+            d.train.contextdata.to_csv(path_or_buf='workingFiles/dysfunctionalData.csv')
+            results = m.test(basic_model, d.train, lenTrainedActs, lenTrainedRoles)
+            store_results("workingFiles/SDL_OTF_drift_reset.csv", results)
             print("Updating model")
+
+            #re-add new events to data (prep) before training again
             basic_model = m.train(d.train)
+            lenTrainedActs = len(d.train.values['event'])
+            lenTrainedRoles = len(d.train.values['role'])
             driftsidd.append(eventCounter)
 
 
