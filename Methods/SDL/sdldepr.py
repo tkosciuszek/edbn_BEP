@@ -1,5 +1,7 @@
 import numpy as np
+import random as rn
 
+import pandas as pd
 from tensorflow.keras import utils as ku
 from tensorflow.keras.layers import Embedding, Dense, Input, Concatenate, Softmax, Dropout, Flatten
 from tensorflow.keras.models import Model
@@ -9,6 +11,8 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
 def learn_model(log, attributes, epochs, early_stop):
     num_activities = len(log.values[log.activity]) + 1
+    print("Num activities is {}".format(num_activities))
+    # num_activities = 450
     # Input + Embedding layer for every attribute
     input_layers = []
     embedding_layers = []
@@ -51,17 +55,24 @@ def learn_model(log, attributes, epochs, early_stop):
         split = 0
     else:
         split = 0.2
+    print("x is {}".format(len(x)))
     model.fit(x=x, y=y,
               validation_split=split,
               verbose=2,
               callbacks=[early_stopping],
-              batch_size=16,
+              batch_size=32,
               epochs=epochs)
     return model
 
-
-def transform_data(log, columns):
+#This could cause some problems later on down the line
+def transform_data(log, columns, lenPrevActs = None, lenRoles = None):
     num_activities = len(log.values[log.activity]) + 1
+    # num_activities = 450
+    # num_cases =
+    # num_roles =
+    # print("lenPrevActs is {}".format(lenPrevActs))
+    # print("lenRoles is {}".format(lenRoles))
+    # print("columns are {}".format(columns))
 
     col_num_vals = {}
     for col in columns:
@@ -77,17 +88,32 @@ def transform_data(log, columns):
     for row in log.contextdata.iterrows():
         row = row[1]
         i = 0
-        for attr in columns:
-            if attr not in log.ignoreHistoryAttributes:
+        for attr in range(len(columns)):
+            if columns[attr] not in log.ignoreHistoryAttributes and attr < 1:
                 for k in range(log.k):
-                    inputs[i].append(row[attr + "_Prev%i" % k])
+                    if lenPrevActs is not None and int(row[columns[attr] + "_Prev%i" % k]) >= int(lenPrevActs):
+                        inputs[i].append(rn.randint(0, lenPrevActs - 1))
+                    else:
+                        inputs[i].append(row[columns[attr] + "_Prev%i" % k])
+                    i += 1
+            elif columns[attr] not in log.ignoreHistoryAttributes:
+                for k in range(log.k):
+                    if lenRoles is not None and int(row[columns[attr] + "_Prev%i" % k]) >= int(lenRoles):
+                        inputs[i].append(rn.randint(0, lenRoles - 1))
+                    else:
+                        inputs[i].append(row[columns[attr] + "_Prev%i" % k])
                     i += 1
         outputs.append(row[log.activity])
 
     outputs = ku.to_categorical(outputs, num_activities)
     for i in range(len(inputs)):
         inputs[i] = np.array(inputs[i])
-    print("Length transformed inputs is {}".format(len(inputs)))
+    # ins = pd.DataFrame(inputs)
+    # ins.to_csv("workingFiles/Inputs.csv")
+    # ins = pd.DataFrame(outputs)
+    # ins.to_csv("workingFiles/Outputs.csv")
+    # print(inputs)
+    # print(outputs)
     return inputs, outputs, col_num_vals
 
 
@@ -97,21 +123,28 @@ def train(log, epochs, early_stop):
 
 def update(model, log):
     inputs, expected, _ = transform_data(log, [a for a in log.attributes() if a != log.time and a != log.trace])
+    # print("Input")
+    # print(inputs)
+    # print("Expected")
+    # print(expected)
     model.fit(inputs, y=expected,
               validation_split=0,
               verbose=0,
-              batch_size=16,
+              batch_size=32,
               epochs=10)
     return model
 
 
-def test(model, log):
-    inputs, expected, _ = transform_data(log, [a for a in log.attributes() if a != log.time and a != log.trace])
+def test(model, log, lenEvents = None, lenRoles = None):
+    inputs, expected, _ = transform_data(log, [a for a in log.attributes() if a != log.time and a != log.trace], lenPrevActs=lenEvents, lenRoles=lenRoles)
+    # print(inputs)
     predictions = model.predict(inputs)
     predict_vals = np.argmax(predictions, axis=1)
     predict_probs = predictions[np.arange(predictions.shape[0]), predict_vals]
     expected_vals = np.argmax(expected, axis=1)
-    expected_probs = predictions[np.arange(predictions.shape[0]), expected_vals]
+    # print(expected_vals)
+    #expected_probs = predictions[np.arange(predictions.shape[0]), expected_vals]
+    expected_probs = np.zeros(predictions.shape[0])
     result = zip(expected_vals, predict_vals, predict_probs, expected_probs)
     return result
 
@@ -129,7 +162,7 @@ def test_and_update(logs, model):
         model.fit(inputs, y=expected,
                   validation_split=0,
                   verbose=0,
-                  batch_size=16,
+                  batch_size=32,
                   epochs=10)
     return results
 
@@ -213,3 +246,4 @@ if __name__ == "__main__":
     basic_model = m.train(d.train)
     res = m.test(basic_model, d.test_orig)
     print("Acc:", ACCURACY.calculate(res))
+

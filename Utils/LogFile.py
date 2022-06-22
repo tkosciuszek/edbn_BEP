@@ -13,9 +13,9 @@ import math
 
 class LogFile:
 
-    def __init__(self, df, time_attr, trace_attr, activity_attr = None, values = None, integer_input = False,\
-                 convert = True, k = 1, dtype=None):
-        self.df = df
+    def __init__(self, filename, delim, header, rows, time_attr, trace_attr, activity_attr=None, values=None,
+                 integer_input=False, convert=True, k=1, dtype=None):
+        self.filename = filename
         self.time = time_attr
         self.trace = trace_attr
         self.activity = activity_attr
@@ -34,16 +34,18 @@ class LogFile:
         type = "str"
         if integer_input:
             type = "int"
-        if df is not None:
+        if filename is not None:
             if dtype is not None:
-                self.data = df
+                self.data = pd.read_csv(self.filename, header=header, nrows=rows, delimiter=delim, encoding='latin-1',
+                                        dtype=dtype, low_memory=False)
             else:
-                self.data = df
+                self.data = pd.read_csv(self.filename, header=header, nrows=rows, delimiter=delim, encoding='latin-1',
+                                        low_memory=False)
 
             # Determine types for all columns - numerical or categorical
             for col_type in self.data.dtypes.iteritems():
                 if col_type[1] == 'float64':
-                   self.numericalAttributes.add(col_type[0])
+                    self.numericalAttributes.add(col_type[0])
                 else:
                     self.categoricalAttributes.add(col_type[0])
 
@@ -59,7 +61,7 @@ class LogFile:
 
     def get_cases(self):
         return self.get_data().groupby([self.trace])
-    
+
     def filter_case_length(self, min_length):
         cases = self.data.groupby([self.trace])
         filtered_cases = []
@@ -128,7 +130,7 @@ class LogFile:
         if column not in self.values:
             return value
         vals = self.values[column]
-        found = np.where(vals==value)
+        found = np.where(vals == value)
         if len(found[0]) == 0:
             return None
         else:
@@ -138,7 +140,6 @@ class LogFile:
         if column not in self.values:
             return int_val
         return self.values[column][int_val - 1]
-
 
     def attributes(self):
         return self.data.columns
@@ -217,10 +218,10 @@ class LogFile:
             self.contextdata = self.data
 
         if self.contextdata is None:
-            # result = map(self.create_k_context_trace, self.data.groupby([self.trace]))
+            result = map(self.create_k_context_trace, self.data.groupby([self.trace]))
 
-            with mp.Pool(mp.cpu_count()) as p:
-                result = p.map(self.create_k_context_trace, self.data.groupby([self.trace]))
+            # with mp.Pool(mp.cpu_count()) as p:
+            #     result = p.map(self.create_k_context_trace, self.data.groupby([self.trace]))
 
             # result = map(self.create_k_context_trace, self.data.groupby([self.trace]))
 
@@ -251,28 +252,28 @@ class LogFile:
             return
 
         for i in range(self.k):
-            self.contextdata['duration_%i' %(i)] = self.contextdata.apply(self.calc_duration, axis=1, args=(i,))
+            self.contextdata['duration_%i' % (i)] = self.contextdata.apply(self.calc_duration, axis=1, args=(i,))
             self.numericalAttributes.add("duration_%i" % (i))
 
     def calc_duration(self, row, k):
         if row[self.time + "_Prev%i" % (k)] != 0:
             startTime = parse(self.convert_int2string(self.time, int(row[self.time + "_Prev%i" % (k)])))
-            endTime = parse(self.convert_int2string(self.time,int(row[self.time])))
+            endTime = parse(self.convert_int2string(self.time, int(row[self.time])))
             return (endTime - startTime).total_seconds()
         else:
             return 0
 
-    def discretize(self,row, bins=25):
+    def discretize(self, row, bins=25):
         if isinstance(bins, int):
-            labels = [str(i) for i in range(1,bins+1)]
+            labels = [str(i) for i in range(1, bins + 1)]
         else:
-            labels = [str(i) for i in range(1,len(bins))]
+            labels = [str(i) for i in range(1, len(bins))]
         if self.isNumericAttribute(row):
             self.numericalAttributes.remove(row)
             self.categoricalAttributes.add(row)
             self.contextdata[row], binned = pd.cut(self.contextdata[row], bins, retbins=True, labels=labels)
-            #self.contextdata[row] = self.contextdata[row].astype(str)
-            #self.contextdata[row] = self.convert_column2ints(self.contextdata[row])
+            # self.contextdata[row] = self.contextdata[row].astype(str)
+            # self.contextdata[row] = self.convert_column2ints(self.contextdata[row])
         return binned
 
     def isNumericAttribute(self, attribute):
@@ -329,7 +330,8 @@ class LogFile:
 
         if split_case:
             if method == "random":
-                train_inds = random.sample(range(self.contextdata.shape[0]), k=round(self.contextdata.shape[0] * train_percentage))
+                train_inds = random.sample(range(self.contextdata.shape[0]),
+                                           k=round(self.contextdata.shape[0] * train_percentage))
                 test_inds = list(set(range(self.contextdata.shape[0])).difference(set(train_inds)))
             elif method == "train-test":
                 train_inds = np.arange(0, self.contextdata.shape[0] * train_percentage)
@@ -359,28 +361,20 @@ class LogFile:
         train = self.contextdata.loc[train_inds]
         test = self.contextdata.loc[test_inds]
 
+        print("Train:", len(train_inds))
+        print("Test:", len(test_inds))
 
-
-        train_logfile = LogFile(None, self.time, self.trace, self.activity, self.values, False, False)
-        train_logfile.df = self.df
+        train_logfile = LogFile(None, None, None, None, self.time, self.trace, self.activity, self.values, False, False)
+        train_logfile.filename = self.filename
         train_logfile.values = self.values
         train_logfile.contextdata = train
         train_logfile.categoricalAttributes = self.categoricalAttributes
         train_logfile.numericalAttributes = self.numericalAttributes
-        # print("Train inds")
-        # print(train_inds)
-        # print("Data loc")
-        # print(list(self.data))
-        # print("Train:", len(train_inds))
-        # print("Test:", len(test_inds))
-        # print("Data Index:", len(self.data.index))
-        train_inds = [i for i in train_inds if i in self.data.index]
-        # print("Removed {} Rows From Data".format(len(self.data.index) - len(train_inds)))
         train_logfile.data = self.data.loc[train_inds]
         train_logfile.k = self.k
 
-        test_logfile = LogFile(None, self.time, self.trace, self.activity, self.values, False, False)
-        test_logfile.df = self.df
+        test_logfile = LogFile(None, None, None, None, self.time, self.trace, self.activity, self.values, False, False)
+        test_logfile.filename = self.filename
         test_logfile.values = self.values
         test_logfile.contextdata = test
         test_logfile.categoricalAttributes = self.categoricalAttributes
@@ -390,14 +384,15 @@ class LogFile:
 
         return train_logfile, test_logfile
 
-
     def split_days(self, date_format, num_days=1):
         from datetime import datetime
 
-        self.contextdata["days"] = self.contextdata[self.time].map(lambda l: str(datetime.strptime(l, date_format).isocalendar()[:3]))
+        self.contextdata["days"] = self.contextdata[self.time].map(
+            lambda l: str(datetime.strptime(l, date_format).isocalendar()[:3]))
         days = {}
         for group_name, group in self.contextdata.groupby("days"):
-            new_logfile = LogFile(None, None, None, None, self.time, self.trace, self.activity, self.values, False, False)
+            new_logfile = LogFile(None, None, None, None, self.time, self.trace, self.activity, self.values, False,
+                                  False)
             new_logfile.filename = self.filename
             new_logfile.values = self.values
             new_logfile.categoricalAttributes = self.categoricalAttributes
@@ -413,10 +408,12 @@ class LogFile:
     def split_weeks(self, date_format, num_days=1):
         from datetime import datetime
 
-        self.contextdata["year_week"] = self.contextdata[self.time].map(lambda l: str(datetime.strptime(l, date_format).isocalendar()[:2]))
+        self.contextdata["year_week"] = self.contextdata[self.time].map(
+            lambda l: str(datetime.strptime(l, date_format).isocalendar()[:2]))
         weeks = {}
         for group_name, group in self.contextdata.groupby("year_week"):
-            new_logfile = LogFile(None, None, None, None, self.time, self.trace, self.activity, self.values, False, False)
+            new_logfile = LogFile(None, None, None, None, self.time, self.trace, self.activity, self.values, False,
+                                  False)
             new_logfile.filename = self.filename
             new_logfile.values = self.values
             new_logfile.categoricalAttributes = self.categoricalAttributes
@@ -437,11 +434,13 @@ class LogFile:
 
     def split_months(self, date_format, num_days=1):
         from datetime import datetime
-        self.contextdata["month"] = self.contextdata[self.time].map(lambda l: str(datetime.strptime(l, date_format).strftime("%Y/%m")))
+        self.contextdata["month"] = self.contextdata[self.time].map(
+            lambda l: str(datetime.strptime(l, date_format).strftime("%Y/%m")))
 
         months = {}
         for group_name, group in self.contextdata.groupby("month"):
-            new_logfile = LogFile(None, None, None, None, self.time, self.trace, self.activity, self.values, False, False)
+            new_logfile = LogFile(None, None, None, None, self.time, self.trace, self.activity, self.values, False,
+                                  False)
             new_logfile.filename = self.filename
             new_logfile.values = self.values
             new_logfile.categoricalAttributes = self.categoricalAttributes
@@ -457,10 +456,12 @@ class LogFile:
     def split_date(self, date_format, year_week, from_week=None):
         from datetime import datetime
 
-        self.contextdata["year_week"] = self.contextdata[self.time].map(lambda l: str(datetime.strptime(l, date_format).isocalendar()[:2]))
+        self.contextdata["year_week"] = self.contextdata[self.time].map(
+            lambda l: str(datetime.strptime(l, date_format).isocalendar()[:2]))
 
         if from_week:
-            train = self.contextdata[(self.contextdata["year_week"] >= from_week) & (self.contextdata["year_week"] < year_week)]
+            train = self.contextdata[
+                (self.contextdata["year_week"] >= from_week) & (self.contextdata["year_week"] < year_week)]
         else:
             train = self.contextdata[self.contextdata["year_week"] < year_week]
         test = self.contextdata[self.contextdata["year_week"] == year_week]
@@ -484,7 +485,6 @@ class LogFile:
         test_logfile.k = self.k
 
         return train_logfile, test_logfile
-
 
     def create_folds(self, k):
         result = []
@@ -533,16 +533,15 @@ class LogFile:
 
                 stop_value = len(trace)
                 if window:
-                    stop_value = min(len(trace), i+window)
+                    stop_value = min(len(trace), i + window)
 
-                for fol_act in set(trace[i+1:stop_value+1]):
+                for fol_act in set(trace[i + 1:stop_value + 1]):
                     if fol_act not in follow_counts[act]:
                         follow_counts[act][fol_act] = 0
                     follow_counts[act][fol_act] += 1
 
-
         follows = {}
-        for a in range(1, len(self.values[self.activity])+1):
+        for a in range(1, len(self.values[self.activity]) + 1):
             always = 0
             sometimes = 0
             if a in follow_counts:
@@ -557,11 +556,10 @@ class LogFile:
 
         return follows, follow_counts
 
-
     def get_relation_entropy(self):
         follows, _ = self.get_follows_relations()
         full_entropy = []
-        for act in range(1, len(self.values[self.activity])+1):
+        for act in range(1, len(self.values[self.activity]) + 1):
             RC = follows[act]
             p_a = RC[0] / len(self.values[self.activity])
             p_s = RC[1] / len(self.values[self.activity])
@@ -576,7 +574,6 @@ class LogFile:
             full_entropy.append(entropy)
         return full_entropy
 
-
     def get_j_measure_trace(self, trace, window):
         _, follows = self.get_traces_follows_relations([trace], window)
         j_measure = []
@@ -585,7 +582,7 @@ class LogFile:
             if e not in value_counts:
                 value_counts[e] = 0
             value_counts[e] += 1
-        for act_1 in range(1, len(self.values[self.activity])+1):
+        for act_1 in range(1, len(self.values[self.activity]) + 1):
             for act_2 in range(1, len(self.values[self.activity]) + 1):
                 num_events = len(trace)
                 if act_1 in follows and act_2 in follows[act_1]:
@@ -596,7 +593,7 @@ class LogFile:
                 if act_1 not in value_counts:
                     p_a = 0
                 else:
-                    p_a = value_counts.get(act_1, 0)/ num_events
+                    p_a = value_counts.get(act_1, 0) / num_events
 
                 if act_2 not in value_counts:
                     p_b = 0
@@ -608,12 +605,11 @@ class LogFile:
                     j_value += p_aFb * math.log(p_aFb / p_b, 2)
 
                 if p_aFb != 1 and p_b != 1:
-                    j_value += (1-p_aFb) * math.log((1-p_aFb) / (1-p_b), 2)
+                    j_value += (1 - p_aFb) * math.log((1 - p_aFb) / (1 - p_b), 2)
 
                 j_measure.append(p_a * j_value)
 
         return j_measure
-
 
     def get_j_measure(self, window=5):
         traces = self.get_traces()

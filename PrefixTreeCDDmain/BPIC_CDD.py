@@ -66,16 +66,18 @@ def main(config, file, window_size, tree_size, decay_lambda, noise):
     currentNode = tree.root  # Start from the root node
 
     start_time = time.time()
-
+    drifts = []
     for ev in static_event_stream:
         caseList, Dcase, currentNode, pruningCounter, traceCounter, window = tree.insertByEvent(caseList, Dcase, currentNode, ev, pruningCounter, traceCounter, endEventsDic, window)
         eventCounter += 1
 
         if window.cddFlag:  # If a complete new tree has been created
             if len(window.prefixTreeList) == window.WinSize:  # Maximum size of window reached, start concept drift detection within the window
-                window.conceptDriftDetection(adwin, ph)
+                temp_drifts = window.conceptDriftDetection(adwin, ph, eventCounter)
                 window.WinSize = min(window.WinSize + 1, window.maxWindowSize)
-
+                for i in temp_drifts:
+                    if i not in drifts:
+                        drifts.append(i)
                 if len(window.prefixTreeList) == window.WinSize:  # If there was no drift detected within the window
                     window.prefixTreeList = deque(islice(window.prefixTreeList, 1, None))  # Drop the oldest tree
 
@@ -84,7 +86,7 @@ def main(config, file, window_size, tree_size, decay_lambda, noise):
 
     if configuration:
         logProvider(static_event_stream, window)  # Provide the sub-logs of the drifts
-
+    print(drifts)
 def as_dict(object):
     dictionaryObject = object.__dict__
     return dictionaryObject

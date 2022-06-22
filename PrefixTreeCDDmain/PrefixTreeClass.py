@@ -31,14 +31,14 @@ class TrieNode:
 
     def __init__(self, activity='root', parentNode=None):
         self.nodeId = uuid.uuid1()  # Random identifier for the node
-        self.activity = activity  # Activity name for the event stored in the node
+        self.activity = str(activity)  # Activity name for the event stored in the node
         self.parent = parentNode  # Parent node/events
         self.parentList = []  # Create list of all parent nodes for this node
         self.fillParentList()  # Fill the list with the previous parents and the new parent
         self.children = dict()  # Children nodes/events are stored in a dictionary
         self.frequency = int()  # Frequency of the event
         if self.parent:
-            self.branchId = ','.join(self.parentList) + "," + activity
+            self.branchId = ','.join(self.parentList) + "," + str(activity)
 
     # class method to access the get method without any instance
     @classmethod
@@ -116,9 +116,12 @@ class PrefixTree:
     # Function to insert a new node/event on the tree
     def insertByEvent(self, caseList, Dcase, current, ev, pruningCounter, traceCounter, endEventsDic, window):
         window.cddFlag = False  # We don't want CDD until we finish processing a complete tree
-        caseID = ev["case:concept:name"]  # Case ID from the trace attributes
-        eventID = ev["concept:name"] # Event ID from the event attributes
-        eventTimestamp = ev["time:timestamp"]
+        # caseID = ev["case:concept:name"]  # Case ID from the trace attributes
+        caseID = ev["case"]  # Case ID from the trace attributes
+        # eventID = ev["concept:name"] # Event ID from the event attributes
+        eventID = ev["event"]  # Event ID from the event attributes
+        # eventTimestamp = ev["time:timestamp"]
+        eventTimestamp = ev["completeTime"]
         if caseID not in caseList: # If it is a new case that has never been seen before
             current = self.root
             Dcase[caseID] = Case(caseID, current)  # Instance of the Case object for the dictionary

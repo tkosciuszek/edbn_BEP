@@ -1,5 +1,5 @@
 import copy
-
+from Utils.LogFile import LogFile
 
 class Data:
     def __init__(self, name, logfile):
@@ -76,6 +76,24 @@ class Data:
 
     def get_test_batch(self, idx):
         return self.test[self.get_batch_ids()[idx]]["data"]
+
+    def get_test_batchi(self, idx1, idx2):
+        test = self.test_orig
+        test_logfile = LogFile(None, None, None, None, test.time, test.trace, test.activity, test.values, False, False)
+        test_logfile.filename = test.filename
+        test_logfile.values = test.values
+        print("Index 1 is {}".format(idx1))
+        print("Index 2 is {}".format(idx2))
+        print("Size test data is {}".format(test.contextdata.shape))
+        test_logfile.contextdata = test.contextdata.iloc[idx1:idx2, :]
+        print(type(test_logfile.contextdata))
+        test_logfile.categoricalAttributes = test.categoricalAttributes
+        test_logfile.numericalAttributes = test.numericalAttributes
+        test_logfile.data = test.data.iloc[idx1:idx2, :]
+        test_logfile.k = test.k
+        print(test_logfile.data.shape)
+        print(test_logfile.contextdata.shape)
+        return test_logfile
 
     def get_batch_timestamp(self, idx):
         return self.get_batch_ids()[idx]

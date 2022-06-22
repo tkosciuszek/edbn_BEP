@@ -23,8 +23,8 @@ for k in colors:
 
 LINE_STYLE = {"DBN": "-", "SDL": "--", "Tax": "-.", "Di Mauro": ":"}
 
-METHODS = ["SDL_OTF","DBN", "SDL", "Tax", "Di Mauro"]
-DATASETS = ["Helpdesk", "BPIC11", "BPIC12", "BPIC15_1", "BPIC15_2", "BPIC15_3", "BPIC15_4", "BPIC15_5"]
+METHODS = ["SDL_OTF_Base","DBN", "SDL", "Tax", "Di Mauro"]
+DATASETS = ["BPIC_2015_OTF", "Helpdesk", "BPIC11", "BPIC12", "BPIC15_1", "BPIC15_2", "BPIC15_3", "BPIC15_4", "BPIC15_5"]
 
 RESET = [True, False]
 WINDOW = [0,1,5]
@@ -277,7 +277,7 @@ def create_strategy_plot_new(results, dataset, windowsize = 2500):
 
                     plt.subplot(2, 2, fig_num)
                     plt.title(m)
-                    plt.ylim(0.2, 1)
+                    plt.ylim(0, 1)
                     plt.plot(x, y, color=tableau20[i], label=l, linewidth=0.5)
                 i += 1
 
@@ -461,11 +461,11 @@ if __name__ == "__main__":
     # create_timing_table(timings, "Helpdesk")
     # list_results = result_list()
     # ---Develops only the baseline------
-    #create_baseline_dataset_plot(results)
+    # create_baseline_dataset_plot(results)
 
     # create_strategy_plot_new(results, "BPIC12")
     # ---Creates a visual of comparison by Network type------
-    create_strategy_plot_new(results, "BPIC15_1")
+    create_strategy_plot_new(results, "BPIC_2015_OTF")
     # create_strategy_plot(results)
 
     # ---Views performance only on the BPIC15 Dataset------

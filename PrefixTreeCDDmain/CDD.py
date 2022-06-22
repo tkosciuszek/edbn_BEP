@@ -4,8 +4,8 @@ from itertools import tee, islice
 from collections import deque
 from PrefixTreeCDDmain.PrefixTreeClass import PrefixTree
 from PrefixTreeCDDmain.HeuristicsAlgo import directlyFollows
-import rpy2.robjects.numpy2ri
-rpy2.robjects.numpy2ri.activate()
+# import rpy2.robjects.numpy2ri
+# rpy2.robjects.numpy2ri.activate()
 from PrefixTreeCDDmain.DDScripts import prefixTreeDistances, driftDetectionADWIM, driftDetectionPH
 
 # Class for the Drifts
@@ -41,7 +41,8 @@ class Window:
 
         return newWindow
 
-    def conceptDriftDetection(self, adwin, ph):
+    def conceptDriftDetection(self, adwin, ph, eventNum):
+        drifts = {}
         indexSlider = 1
         while indexSlider < len(self.prefixTreeList):
             W0 = deque(islice(self.prefixTreeList, indexSlider))
@@ -51,18 +52,27 @@ class Window:
             treeDistance = prefixTreeDistances(Window0, Window1)
             indexSlider = driftDetectionADWIM(adwin, treeDistance.treeDistanceMetric, self, indexSlider)
 
-            if self.cddFlag:  # If a drift was detected <-----------------DRIFT DETECTED---------------
+            if self.cddFlag:  # If a drift was detected
                 referenceWinNumberOfEvents = len(W0) * self.prefixTreeList[0].pruningSteps
                 testWinNumberOfEvents = len(W1) * self.prefixTreeList[0].pruningSteps
                 eventsSeen = W0[-1].eventsSeen
                 criticalNodes = [x for x in treeDistance.notInterDict if x[1] >= 300]
-                drift = Drift(referenceWinNumberOfEvents, testWinNumberOfEvents, Window0, Window1, treeDistance, eventsSeen, criticalNodes)
+                drift = Drift(referenceWinNumberOfEvents, testWinNumberOfEvents, Window0, Window1, treeDistance,
+                              eventsSeen, criticalNodes)
                 self.driftsIdentified.append(drift)
+                print("Drift detected at event index {}".format(eventNum))
+                if eventNum not in drifts:
+                    drifts[eventNum] = {'curEv':eventNum, 'detEv':drift.eventsSeen,
+                                        'refWinSize': drift.refWinSize, 'testWinSize':drift.testWinSize,
+                                        'treeDist':drift.treeDistance.treeDistanceMetric}
                 print("ADWIN change detected at: " + str(drift.eventsSeen) + " events\n"
-                        "Reference window size: " + str(drift.refWinSize) + "events\n"
-                        "Test window size: " + str(drift.testWinSize) + "events\n"
-                        "Tree distance metric: " + str(drift.treeDistance.treeDistanceMetric) + "\n"
-                        "Critical nodes and relations... \n")
+                                                                             "Reference window size: " + str(
+                    drift.refWinSize) + "events\n"
+                                        "Test window size: " + str(drift.testWinSize) + "events\n"
+                                                                                        "Tree distance metric: " + str(
+                    drift.treeDistance.treeDistanceMetric) + "\n"
+                                                             "Critical nodes and relations... \n")
+
                 for tupleNode in drift.criticalNodes:
                     if isinstance(tupleNode[0], tuple):
                         rel1 = tupleNode[0][0].split(",")[-1]
@@ -74,6 +84,7 @@ class Window:
                 print()
 
         self.cddFlag = False  # Finished with CDD
+        return drifts
 
     def buildContinMatrix(self, W0, W1):  # Receive the windows containing the Prefix Trees
         W0Tree = PrefixTree(self.prefixTreeList[0].pruningSteps, self.prefixTreeList[0].lambdaDecay, self.prefixTreeList[0].TPO)
