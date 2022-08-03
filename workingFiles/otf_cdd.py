@@ -58,5 +58,6 @@ for _, event in data.iterrows():
                 window.prefixTreeList = deque(islice(window.prefixTreeList, 1, None))  # Drop the oldest tree
 
 end_time = time.time()
+totalTime = end_time - start_time
 print("Total Processing Time {}".format(end_time - start_time))
 print("Total number of events is {}".format(eventCounter))

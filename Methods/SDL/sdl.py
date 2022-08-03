@@ -87,7 +87,7 @@ def transform_data(log, columns):
     outputs = ku.to_categorical(outputs, num_activities)
     for i in range(len(inputs)):
         inputs[i] = np.array(inputs[i])
-    print("Length transformed inputs is {}".format(len(inputs)))
+    # print("Length transformed inputs is {}".format(len(inputs)))
     return inputs, outputs, col_num_vals
 
 

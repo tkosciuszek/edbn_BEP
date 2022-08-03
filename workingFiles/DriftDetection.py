@@ -1,5 +1,6 @@
 import time
 import json
+import csv
 import pandas as pd
 from Data.data import Data
 from Utils.LogFile import LogFile
@@ -106,6 +107,11 @@ def run(file, dataName, wSize = 10, tSize = 1000, dLamb = 0.25, noise = 1):
     with open("results/driftJSON/{}.json".format(dataName), "w") as fp:
         json.dump(drifts, fp)
 
+def store_results(file, results):
+    with open(file, "a") as fout:
+        fout.write(results)
+        fout.close()
+    return
 
 
 
@@ -113,10 +119,16 @@ if __name__ == "__main__":
     winS = [8, 10, 12]
     preT = [500, 800, 1000]
     lamb = [0, 0.15, 0.25]
-    files = ['Data/BPIC11.csv', 'Data/BPIC12.csv', 'Data/BPIC15_2_sorted_new.csv', 'Data/BPIC15_3_sorted_new.csv',
-             'Data/BPIC15_4_sorted_new.csv']
+    files = ['Data/BPIC15_1_sorted_new.csv',
+             'Data/BPIC15_2_sorted_new.csv',
+             'Data/BPIC15_3_sorted_new.csv',
+             'Data/BPIC15_4_sorted_new.csv',
+             'Data/BPIC15_5_sorted_new.csv',
+             'Data/Helpdesk.csv',
+             'Data/BPIC11.csv',
+             'Data/BPIC12.csv']
     #File format is DataName_MaxWinSize_PrefixTreeSize_DecayLambda.json
-    names = ['BPIC11', 'BPIC12', 'BPIC15_2', 'BPIC15_3', 'BPIC15_4']
+    names = ['BPIC15_1', 'BPIC15_2', 'BPIC15_3', 'BPIC15_4', 'BPIC15_5', 'Helpdesk', 'BPIC11', 'BPIC12']
     for l in lamb:
         for w in winS:
             for t in preT:
@@ -125,6 +137,8 @@ if __name__ == "__main__":
                     print("Beginning {}_{}_{}_{}".format(names[f], w, t, l))
                     run(file = files[f], dataName="{}_{}_{}_{}".format(names[f], w, t, l),
                         wSize = w, tSize = t, dLamb=l)
+                    store_results("results/driftJSON/DriftDetectionTimings.txt", results= '{}, {}, {}, {}, {}'.format(names[f],
+                                                                                                                 w, t, l, time.time() - start))
                     print("Took {} seconds to complete {}_{}_{}_{}".format(time.time() - start, names[f], w, t, l))
 
 

@@ -52,8 +52,8 @@ class Method:
         # print("%i / %i" % (evWindow, len(data.get_batch_ids())))
         predict_batch = data.get_test_batchi(prevTestInd, currentTestInd)
         # Test current batch
-        print("Predict batch size")
-        print(predict_batch.contextdata.shape)
+        # print("Predict batch size")
+        # print(predict_batch.contextdata.shape)
         results = self.test(model, predict_batch)
 
         start_time = time.time()
