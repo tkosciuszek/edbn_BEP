@@ -7,33 +7,42 @@ from scipy import stats
 
 import ConceptDrift as cd
 from Utils.LogFile import LogFile
-
-
-def learn_and_dump_model():
-    train = LogFile("../Data/BPIC18.csv", ",", 0, 30000, "startTime", "case", activity_attr=None, integer_input=False, convert=False)
-    train.remove_attributes(["eventid", "identity_id", "event_identity_id", "year", "penalty_", "amount_applied", "payment_actual", "penalty_amount", "risk_factor", "cross_compliance", "selected_random", "selected_risk", "selected_manually", "rejected"])
+#def __init__(self, filename, delim, header, rows, time_attr, trace_attr, activity_attr=None, values=None,
+                 #integer_input=False, convert=True, k=1, dtype=None):
+base_folder = '/Users/teddy/Documents/TU_e/ThirdYear/Quartile_4/BEP/edbn_BEP/'
+timeattr = 'completeTime'
+traceattr = 'case'
+activityattr = 'event'
+def learn_and_dump_model(dataset, timeattr=timeattr, traceattr=traceattr, activityattr=activityattr, base_folder = base_folder):
+    train = LogFile("{}{}".format(base_folder, dataset), ",", 0, 30000, time_attr=timeattr, trace_attr=traceattr, activity_attr=activityattr, integer_input=False, convert=False)
+    #train.remove_attributes(["eventid", "identity_id", "event_identity_id", "year", "penalty_", "amount_applied", "payment_actual", "penalty_amount", "risk_factor", "cross_compliance", "selected_random", "selected_risk", "selected_manually", "rejected"])
+    attrs = ['event', 'role', 'completeTime', 'case']
+    train.remove_attributes([i for i in train.attributes() if i not in attrs])
     train.convert2int()
     model = cd.create_model(train, train)
 
     with open("model_30000b", "wb") as fout:
         pickle.dump(model, fout)
 
-def experiment_standard():
+def experiment_standard(dataset, timeattr=timeattr, traceattr=traceattr, activityattr=activityattr, base_folder = base_folder):
     with open("model_30000b", "rb") as fin:
         model = pickle.load(fin)
 
     print("Get Scores")
-    train = LogFile("../Data/BPIC18.csv", ",", 0, 30000, "startTime", "case", activity_attr=None, integer_input=False, convert=False)
-    train.remove_attributes(["eventid", "identity_id", "event_identity_id", "year", "penalty_", "amount_applied", "payment_actual", "penalty_amount", "risk_factor", "cross_compliance", "selected_random", "selected_risk", "selected_manually", "rejected"])
+    train = LogFile("{}{}".format(base_folder, dataset), ",", 0, 30000, time_attr=timeattr, trace_attr=traceattr, activity_attr=activityattr, integer_input=False, convert=False)
+    #train.remove_attributes(["eventid", "identity_id", "event_identity_id", "year", "penalty_", "amount_applied", "payment_actual", "penalty_amount", "risk_factor", "cross_compliance", "selected_random", "selected_risk", "selected_manually", "rejected"])
+    attrs = ['event', 'role', 'completeTime', 'case']
+    train.remove_attributes([i for i in train.attributes() if i not in attrs])
     train.convert2int()
 
-    data = LogFile("../Data/BPIC18.csv", ",", 0, None, "startTime", "case", convert=False, values=train.values, integer_input=False)
-    data.remove_attributes(["eventid", "identity_id", "event_identity_id", "year", "penalty_", "amount_applied", "payment_actual", "penalty_amount", "risk_factor", "cross_compliance", "selected_random", "selected_risk", "selected_manually", "rejected"])
+    data = LogFile("{}{}".format(base_folder, dataset), ",", 0, None, time_attr=timeattr, trace_attr=traceattr, activity_attr=activityattr, convert=False, values=train.values, integer_input=False)
+    #data.remove_attributes(["eventid", "identity_id", "event_identity_id", "year", "penalty_", "amount_applied", "payment_actual", "penalty_amount", "risk_factor", "cross_compliance", "selected_random", "selected_risk", "selected_manually", "rejected"])
+    train.remove_attributes([i for i in train.attributes() if i not in attrs])
     data.convert2int()
 
     scores = cd.get_event_scores(data, model)
-    cd.plot_single_scores(scores)
-    cd.plot_pvalues(scores, 400)
+    cd.plot_single_scores(scores, base_folder)
+    cd.plot_pvalues(scores, 1600, base_folder)
 
 
 def experiment_attributes_standard():
@@ -233,11 +242,12 @@ def analyze():
         print(attr, len(train.data[attr].value_counts()))
 
 if __name__ == "__main__":
-    #learn_and_dump_model()
+    dataset = 'Data/BPIC12.csv'
 
-    #experiment_standard()
+    learn_and_dump_model(dataset)
+    experiment_standard(dataset)
     #experiment_attributes_standard()
     #experiment_department()
     #experiment_clusters()
     #experiment_outliers()
-    analyze()
+    # analyze()

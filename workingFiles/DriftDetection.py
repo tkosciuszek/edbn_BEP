@@ -118,17 +118,22 @@ def store_results(file, results):
 if __name__ == "__main__":
     winS = [8, 10, 12]
     preT = [500, 800, 1000]
-    lamb = [0, 0.15, 0.25]
-    files = ['Data/BPIC15_1_sorted_new.csv',
-             'Data/BPIC15_2_sorted_new.csv',
-             'Data/BPIC15_3_sorted_new.csv',
-             'Data/BPIC15_4_sorted_new.csv',
-             'Data/BPIC15_5_sorted_new.csv',
-             'Data/Helpdesk.csv',
+    lamb = [0, 10, 0.25]
+    # files = ['Data/BPIC15_1_sorted_new.csv',
+    #          'Data/BPIC15_2_sorted_new.csv',
+    #          'Data/BPIC15_3_sorted_new.csv',
+    #          'Data/BPIC15_4_sorted_new.csv',
+    #          'Data/BPIC15_5_sorted_new.csv',
+    #          'Data/Helpdesk.csv',
+    #          'Data/BPIC11.csv',
+    #          'Data/BPIC12.csv']
+    files = ['Data/Helpdesk.csv',
              'Data/BPIC11.csv',
              'Data/BPIC12.csv']
     #File format is DataName_MaxWinSize_PrefixTreeSize_DecayLambda.json
-    names = ['BPIC15_1', 'BPIC15_2', 'BPIC15_3', 'BPIC15_4', 'BPIC15_5', 'Helpdesk', 'BPIC11', 'BPIC12']
+    names = ['Helpdesk',
+             'BPIC11',
+             'BPIC12']
     for l in lamb:
         for w in winS:
             for t in preT:

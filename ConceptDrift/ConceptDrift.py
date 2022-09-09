@@ -20,7 +20,7 @@ def create_model(training_structure_data, training_params_data):
     :param ignore_attrs: attributes that have to be ignored when learning the model
     :return: the learned model
     """
-    cbn = gm.generate_model(training_structure_data)
+    cbn = gm.generate_model(training_structure_data, only_activity='event')
     cbn.train(training_params_data)
     return cbn
 
@@ -55,7 +55,7 @@ def get_attribute_detailed_scores(data, model, attribute):
     """
 
 
-def plot_single_scores(scores):
+def plot_single_scores(scores, basefolder):
     """
     Plot all accumulated trace scores
 
@@ -79,10 +79,10 @@ def plot_single_scores(scores):
     plt.scatter(range(len(y)), y)
     plt.xlabel("Traces")
     plt.ylabel("Log Scores")
-    plt.savefig("../Data/scores.png")
+    plt.savefig("{}/Data/scores.png".format(basefolder))
     plt.show()
 
-def plot_pvalues(scores, window):
+def plot_pvalues(scores, window, base_folder):
     """
     Plot the pvalues for the given scores
 
@@ -118,7 +118,7 @@ def plot_pvalues(scores, window):
     plt.plot(range(window, window + len(pvals)), pvals)
     plt.xlabel("Traces")
     plt.ylabel("Log p-values")
-    plt.savefig("../Data/pvals.png")
+    plt.savefig("{}/Data/pvals.png".format(base_folder))
     plt.show()
 
 
